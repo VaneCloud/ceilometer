@@ -57,13 +57,15 @@ cfg.CONF.register_opts(OPTS)
 class Sample(object):
 
     def __init__(self, name, type, unit, volume, user_id, project_id,
-                 resource_id, timestamp, resource_metadata, source=None):
+                 resource_id, timestamp, resource_metadata, project_name, 
+                 source=None):
         self.name = name
         self.type = type
         self.unit = unit
         self.volume = volume
         self.user_id = user_id
         self.project_id = project_id
+        self.project_name = project_name
         self.resource_id = resource_id
         self.timestamp = timestamp
         self.resource_metadata = resource_metadata

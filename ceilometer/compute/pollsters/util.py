@@ -17,6 +17,15 @@ from oslo_utils import timeutils
 
 from ceilometer.compute import util as compute_util
 from ceilometer import sample
+from ceilometer.keystone_client import get_clientv3
+from ceilometer.openstack.common import log
+import time
+
+project_cache_dict = {}
+project_cache_time = {}
+project_cache_timeout = 30
+
+LOG = log.getLogger(__name__)
 
 
 INSTANCE_PROPERTIES = [
@@ -29,6 +38,7 @@ INSTANCE_PROPERTIES = [
     'os_type',
     'ramdisk_id',
 ]
+
 
 
 def _get_metadata_from_object(instance):
@@ -72,6 +82,24 @@ def _get_metadata_from_object(instance):
     return compute_util.add_reserved_user_metadata(instance.metadata, metadata)
 
 
+def get_project_name_by_id(project_id):
+    global project_cache_dict
+    global project_cache_time
+    global project_cache_timeout
+    if project_id in project_cache_dict and project_id in project_cache_time:
+        if time.time() - project_cache_time[project_id] < project_cache_timeout:
+            return project_cache_dict[project_id]
+    try:
+        ksclient = get_clientv3()
+        project = ksclient.projects.get(project_id)
+        project_cache_dict[project_id] = project.name
+        project_cache_time[project_id] = time.time()
+        return project.name
+    except:
+        LOG.warn('failed to get project name by id:{}'.format(project_id))
+        
+    
+
 def make_sample_from_instance(instance, name, type, unit, volume,
                               resource_id=None, additional_metadata=None):
     additional_metadata = additional_metadata or {}
@@ -84,6 +112,7 @@ def make_sample_from_instance(instance, name, type, unit, volume,
         volume=volume,
         user_id=instance.user_id,
         project_id=instance.tenant_id,
+        project_name=get_project_name_by_id(instance.tenant_id),
         resource_id=resource_id or instance.id,
         timestamp=timeutils.isotime(),
         resource_metadata=resource_metadata,
