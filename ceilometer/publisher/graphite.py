@@ -109,67 +109,22 @@ class GraphitePublisher(publisher.PublisherBase):
             project_id = msg['project_id']
             data_type = msg['type']  # gauge, cumulative, delta
             volume = msg['volume']  # usage
-            metric_name = msg['name']  # network,instance,cpu, disk etc ..
+            metric_name = msg['name'].replace('.','_')  # network,instance,cpu, disk etc ..
             metadata = msg['resource_metadata']
+            project_name = msg['project_name'].replace('.','_')
+            instance_name = metadata['display_name'].replace('.','_') + '_' +resource_id[0:6]
 
             instance_match = re.match('instance', metric_name)
-            network_match = re.match('network', metric_name)
-            disk_match = re.match('disk', metric_name)
 
-            # ram,cpu, and disk is not present on all metrics
-            if disk_match:
-                ram = metadata['memory_mb']
-                vcpus = metadata['vcpus']
-                disk_gb = metadata['disk_gb']
-                vmid = metadata.get('instance_id')
-
-            if network_match:
-                vmid = metadata.get('instance_id')
-                vm = vmid
-
-            else:
-                vm = resource_id
-
-            if disk_match:
-                vmram = "%s%s.%s.memory %s %d\n" % (
-                    prefix, project_id, vm, ram, stats_time)
-                vmcpu = "%s%s.%s.cpu_count %s %d\n" % (
-                    prefix, project_id, vm, vcpus, stats_time)
-                vmdisk = "%s%s.%s.disk_space %s %d\n" % (
-                    prefix, project_id, vm, disk_gb, stats_time)
-
-                LOG.debug(_("[+] Graphite %s" % vmram))
-                LOG.debug(_("[+] Graphite %s" % vmcpu))
-                LOG.debug(_("[+] Graphite %s" % vmdisk))
-
-            # build the metrics to send to graphite
-            # We are only interested in the gauge data
-            # Skipping Instance related metrics
 
             if data_type == 'gauge' and instance_match is None:
+                try:
+                    data_to_send = "{}{}.{}.{} {} {}\n".format(prefix, project_name, instance_name, metric_name, volume, stats_time)
+                    self.graphitePush(data_to_send)
 
-                stats_time = time.time()
-
-                vmstat = "%s%s.%s.%s %s %d\n" % (
-                    prefix, project_id, vm, metric_name, volume, stats_time)
-                self.graphitePush(vmstat)
-
-                if disk_match:
-                    self.graphitePush(vmram)
-                    self.graphitePush(vmcpu)
-                    self.graphitePush(vmdisk)
-
-                print ""
-
-            else:
-                LOG.debug(_("[-]"))
-
-            try:
-                LOG.debug(_("OK"))
-
-            except Exception as e:
-                LOG.warn(_("Unable to send to Graphite"))
-                LOG.exception(e)
+                except Exception as e:
+                    LOG.warn(_("Unable to send to Graphite"))
+                    LOG.exception(e)
 
     def publish_events(self, context, events):
         """Send an event message for publishing
