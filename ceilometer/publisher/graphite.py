@@ -57,7 +57,7 @@ OPTS = [cfg.Opt('default_port',
                    default='ceilometer',
                    help='Graphite prefix key'),
         cfg.BoolOpt('hypervisor_in_prefix',
-                    default=True,
+                    default=False,
                     help='If the hypervisor should be added to the prefix'),
         ]
 
@@ -112,7 +112,8 @@ class GraphitePublisher(publisher.PublisherBase):
             metric_name = msg['name'].replace('.','_')  # network,instance,cpu, disk etc ..
             metadata = msg['resource_metadata']
             project_name = msg['project_name'].replace('.','_')
-            instance_name = metadata['display_name'].replace('.','_') + '_' +resource_id[0:6]
+            instance_id = metadata['instance_id'] if 'instance_id' in metadata else resource_id
+            instance_name = metadata['display_name'].replace('.','_') + '_' +instance_id[0:6]
 
             instance_match = re.match('instance', metric_name)
 

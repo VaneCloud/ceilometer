@@ -46,6 +46,7 @@ def _get_metadata_from_object(instance):
     instance_type = instance.flavor['name'] if instance.flavor else None
     metadata = {
         'display_name': instance.name,
+        'instance_id': instance.id,
         'name': getattr(instance, 'OS-EXT-SRV-ATTR:instance_name', u''),
         'instance_type': instance_type,
         'host': instance.hostId,
