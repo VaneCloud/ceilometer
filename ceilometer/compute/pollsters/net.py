@@ -26,6 +26,7 @@ from ceilometer.compute.virt import inspector as virt_inspector
 from ceilometer.i18n import _, _LW
 from ceilometer.openstack.common import log
 from ceilometer import sample
+from ceilometer.compute.pollsters.util import get_project_name_by_id
 
 LOG = log.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class _Base(pollsters.BaseComputePollster):
         resource_metadata['instance_type'] = (instance.flavor['id'] if
                                               instance.flavor else None)
 
+	resource_metadata['display_name'] = instance.name
         compute_util.add_reserved_user_metadata(instance.metadata,
                                                 resource_metadata)
 
@@ -59,6 +61,7 @@ class _Base(pollsters.BaseComputePollster):
             volume=volume,
             user_id=instance.user_id,
             project_id=instance.tenant_id,
+            project_name=get_project_name_by_id(instance.tenant_id),
             resource_id=rid,
             timestamp=timeutils.isotime(),
             resource_metadata=resource_metadata

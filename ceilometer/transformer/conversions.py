@@ -23,6 +23,7 @@ from ceilometer.i18n import _
 from ceilometer.openstack.common import log
 from ceilometer import sample
 from ceilometer import transformer
+from ceilometer.compute.pollsters.util import get_project_name_by_id
 
 LOG = log.getLogger(__name__)
 
@@ -82,6 +83,7 @@ class ScalingTransformer(transformer.TransformerBase):
             volume=self._scale(s) * growth,
             user_id=s.user_id,
             project_id=s.project_id,
+            project_name=get_project_name_by_id(s.project_id),
             resource_id=s.resource_id,
             timestamp=s.timestamp,
             resource_metadata=s.resource_metadata

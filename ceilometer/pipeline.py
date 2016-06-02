@@ -34,6 +34,7 @@ from ceilometer import publisher
 from ceilometer.publisher import utils as publisher_utils
 from ceilometer import sample as sample_util
 from ceilometer import transformer as xformer
+from ceilometer.compute.pollsters.util import get_project_name_by_id
 
 
 OPTS = [
@@ -81,6 +82,7 @@ class SamplePipelineEndpoint(PipelineEndpoint):
                                volume=s['counter_volume'],
                                user_id=s['user_id'],
                                project_id=s['project_id'],
+                               project_name=get_project_name_by_id(s['project_id']),
                                resource_id=s['resource_id'],
                                timestamp=s['timestamp'],
                                resource_metadata=s['resource_metadata'],

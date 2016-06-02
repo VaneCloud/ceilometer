@@ -15,11 +15,19 @@
 
 
 from keystoneclient.v2_0 import client as ksclient
+from keystoneclient.v3 import client as ksclientv3
 from oslo_config import cfg
 
 cfg.CONF.import_group('service_credentials', 'ceilometer.service')
 cfg.CONF.import_opt('http_timeout', 'ceilometer.service')
 
+
+def get_clientv3():
+    return ksclientv3.Client(
+        username=cfg.CONF.service_credentials.os_username,
+        password=cfg.CONF.service_credentials.os_password,
+        tenant_name=cfg.CONF.service_credentials.os_tenant_name,
+        auth_url=cfg.CONF.service_credentials.os_auth_urlv3,)
 
 def get_client():
     return ksclient.Client(
